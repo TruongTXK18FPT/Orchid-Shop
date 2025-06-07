@@ -1,0 +1,347 @@
+/* Reset styles for admin page */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  overflow-y: auto;
+}
+
+.admin-container {
+  width: 100vw;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f0f4ff 0%, #ffffff 100%);
+  margin: 0;
+  padding: 0;
+  position: relative;
+  overflow-y: auto;
+}
+
+.admin-header {
+  padding: 120px 2rem 3rem;
+  text-align: center;
+  margin-bottom: 3rem;
+  position: relative;
+}
+
+.admin-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100px;
+  height: 3px;
+  background: linear-gradient(90deg, #9b4dff, #7b3cb8);
+  border-radius: 2px;
+}
+
+.admin-header h1 {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  background: linear-gradient(45deg, #9b4dff, #7b3cb8);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+  font-weight: 700;
+  letter-spacing: -1px;
+}
+
+.admin-header p {
+  color: #666;
+  font-size: 1.2rem;
+  font-weight: 300;
+  max-width: 600px;
+  margin: 0 auto;
+  line-height: 1.6;
+}
+
+.admin-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 1.5rem;
+  margin-bottom: 3rem;
+  padding: 0 1rem;
+  flex-shrink: 0;
+}
+
+.tab-button {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  color: #555;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.tab-button.active {
+  background: linear-gradient(135deg, #9b4dff, #7b3cb8);
+  color: white;
+  box-shadow: 0 6px 20px rgba(155, 77, 255, 0.25);
+}
+
+.admin-content {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+  margin: 0 2rem 2rem;
+  padding: 2rem;
+  position: relative;
+  min-height: calc(100vh - 300px);
+  overflow: visible;
+}
+
+/* Management Components Styles */
+.management-container {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.management-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  padding-bottom: 1.5rem;
+  border-bottom: 2px solid rgba(155, 77, 255, 0.1);
+}
+
+.management-header h2 {
+  color: #2d2d2d;
+  font-size: 2rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #333, #666);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.add-button {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 1rem 2rem;
+  background: linear-gradient(135deg, #9b4dff, #7b3cb8);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(155, 77, 255, 0.2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.add-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(155, 77, 255, 0.3);
+}
+
+.management-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 8px;
+  margin-top: 1rem;
+}
+
+.management-table th {
+  background: rgba(155, 77, 255, 0.08);
+  color: #444;
+  padding: 1.2rem 1.5rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid rgba(155, 77, 255, 0.1);
+}
+
+.management-table td {
+  padding: 1.2rem 1.5rem;
+  background: white;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  font-size: 1rem;
+  color: #555;
+}
+
+.management-table tr:hover td {
+  background: rgba(155, 77, 255, 0.02);
+}
+
+.orchid-thumbnail {
+  width: 60px;
+  height: 60px;
+  border-radius: 12px;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: 2px solid white;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.8rem;
+}
+
+.edit-button, .delete-button {
+  padding: 0.8rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  font-size: 1.1rem;
+}
+
+.edit-button {
+  background: rgba(155, 77, 255, 0.1);
+  color: #9b4dff;
+}
+
+.edit-button:hover {
+  background: rgba(155, 77, 255, 0.2);
+  transform: translateY(-2px);
+}
+
+.delete-button {
+  background: rgba(255, 77, 77, 0.1);
+  color: #ff4d4d;
+}
+
+.delete-button:hover {
+  background: rgba(255, 77, 77, 0.2);
+  transform: translateY(-2px);
+}
+
+/* Modal Styles */
+.modal-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(5px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.modal {
+  background: white;
+  padding: 2.5rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.modal h3 {
+  color: #333;
+  margin-bottom: 2rem;
+  font-size: 1.8rem;
+  font-weight: 700;
+  background: linear-gradient(45deg, #333, #666);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.modal-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 2.5rem;
+}
+
+.modal-buttons button {
+  padding: 1rem 2rem;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.modal-buttons .save-button {
+  background: linear-gradient(135deg, #9b4dff, #7b3cb8);
+  color: white;
+  box-shadow: 0 4px 15px rgba(155, 77, 255, 0.2);
+}
+
+.modal-buttons .save-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(155, 77, 255, 0.3);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .admin-container {
+    padding: 1.5rem;
+  }
+
+  .management-container {
+    padding: 1.5rem;
+  }
+
+  .admin-header h1 {
+    font-size: 2.5rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .admin-container {
+    padding: 1rem;
+  }
+
+  .admin-header h1 {
+    font-size: 2rem;
+  }
+
+  .management-container {
+    padding: 1rem;
+  }
+
+  .management-header {
+    flex-direction: column;
+    gap: 1rem;
+    align-items: flex-start;
+  }
+
+  .management-table th,
+  .management-table td {
+    padding: 1rem;
+    font-size: 0.9rem;
+  }
+
+  .tab-button {
+    padding: 0.8rem 1.5rem;
+    font-size: 1rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-header h1 {
+    font-size: 1.8rem;
+  }
+
+  .management-table {
+    font-size: 0.8rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+} 
