@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, ShoppingBag, User, Menu, X, Sparkles } from 'lucide-react';
+import { Home, ShoppingBag, User, Menu, X, Sparkles, Settings } from 'lucide-react';
 import logoOrchid from '../assets/LogoOrchid.jpeg';
 import '../styles/Navbar.css';
 
@@ -71,7 +71,8 @@ const Navbar: React.FC = () => {
   const navItems = [
     { name: 'Home', icon: Home, path: '/' },
     { name: 'Shop', icon: ShoppingBag, path: '/shop' },
-    { name: 'Login', icon: User, path: '/login' }
+    { name: 'Login', icon: User, path: '/login' },
+    { name: 'Admin(Demo)', icon: Settings, path: '/admin' }
   ];
 
   return (

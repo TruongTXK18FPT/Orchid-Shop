@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import type { Orchid } from '../types/orchid';
 import { formatPrice } from '../utils/formatters';
 
@@ -18,7 +19,13 @@ const Cart: React.FC<CartProps> = ({
   onUpdateQuantity,
   onRemoveItem 
 }) => {
+  const navigate = useNavigate();
   const total = items.reduce((sum, item) => sum + item.orchid.price * item.quantity, 0);
+
+  const handleCheckout = () => {
+    onClose();
+    navigate('/order', { state: { items } });
+  };
 
   if (!isOpen) return null;
 
@@ -108,6 +115,7 @@ const Cart: React.FC<CartProps> = ({
                 className="checkout-button"
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
+                onClick={handleCheckout}
               >
                 Proceed to Checkout
               </motion.button>

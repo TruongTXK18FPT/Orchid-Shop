@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import EmployeeManagement from '../components/admin/EmployeeManagement';
 import OrchidManagement from '../components/admin/OrchidManagement';
+import OrderManagement from '../components/admin/OrderManagement';
 import '../styles/Admin.css';
 
 const Admin: React.FC = () => {
-  const [activeTab, setActiveTab] = useState<'employees' | 'orchids'>('employees');
+  const [activeTab, setActiveTab] = useState<'employees' | 'orchids' | 'orders'>('employees');
 
   const pageVariants = {
     initial: { opacity: 0, y: 20 },
@@ -36,7 +37,7 @@ const Admin: React.FC = () => {
     >
       <div className="admin-header">
         <h1>Admin Dashboard</h1>
-        <p>Manage your employees and orchid inventory</p>
+        <p>Manage your employees, orchids, and orders</p>
       </div>
 
       <div className="admin-tabs">
@@ -60,6 +61,16 @@ const Admin: React.FC = () => {
         >
           Orchid Management
         </motion.button>
+        <motion.button
+          className={`tab-button ${activeTab === 'orders' ? 'active' : ''}`}
+          onClick={() => setActiveTab('orders')}
+          variants={tabVariants}
+          animate={activeTab === 'orders' ? 'active' : 'inactive'}
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+        >
+          Order Management
+        </motion.button>
       </div>
 
       <div className="admin-content">
@@ -73,8 +84,10 @@ const Admin: React.FC = () => {
           >
             {activeTab === 'employees' ? (
               <EmployeeManagement />
-            ) : (
+            ) : activeTab === 'orchids' ? (
               <OrchidManagement />
+            ) : (
+              <OrderManagement />
             )}
           </motion.div>
         </AnimatePresence>

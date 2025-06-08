@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import ExoticOrchid from '../assets/ExoticOrchid.jpeg';
 import PremiumSection from '../assets/PremiumSection.jpeg';
@@ -7,6 +7,7 @@ import SpecialOffer from '../assets/Special Offer.jpeg';
 import PhalaenopsisOrchid from '../assets/PhalaenopsisOrchid.jpg';
 import CattleyaOrchid from '../assets/CattleyaOrchid.jpg';
 import DendrobiumOrchid from '../assets/Dendrobium Orchid.jpeg';
+import Footer from '../components/Footer';
 import '../styles/Home.css';
 
 const slides = [
@@ -48,11 +49,13 @@ const featuredItems = [
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const [currentSlide, setCurrentSlide] = useState(0);
+  const featuredRef = useRef(null);
+  const isInView = useInView(featuredRef, { once: true, margin: "-100px" });
 
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % slides.length);
-    }, 5000);
+    }, 6000);
 
     return () => clearInterval(timer);
   }, []);
@@ -66,99 +69,145 @@ const Home: React.FC = () => {
   };
 
   return (
-    <div className="home-container">
-      <section className="hero-section">
-        <div className="slider-container">
-          {slides.map((slide, index) => (
-            <motion.div
-              key={index}
-              className="slide"
-              initial={{ opacity: 0 }}
-              animate={{ 
-                opacity: currentSlide === index ? 1 : 0,
-                scale: currentSlide === index ? 1 : 1.1
-              }}
-              transition={{ duration: 0.5 }}
-              style={{ display: currentSlide === index ? 'block' : 'none' }}
+    <>
+      <div className="home-container">
+        <section className="hero-section">
+          <div className="slider-container">
+            {slides.map((slide, index) => (
+              <motion.div
+                key={index}
+                className={`slide ${currentSlide === index ? 'active' : ''}`}
+                initial={{ opacity: 0 }}
+                animate={{ 
+                  opacity: currentSlide === index ? 1 : 0,
+                }}
+                transition={{ duration: 0.8, ease: "easeInOut" }}
+                style={{ display: currentSlide === index ? 'block' : 'none' }}
+              >
+                <img src={slide.url} alt={slide.title} className="slide-image" />
+                <div className="slide-overlay">
+                  <motion.div 
+                    className="slide-content"
+                    initial={{ y: 30, opacity: 0 }}
+                    animate={{ y: 0, opacity: 1 }}
+                    transition={{ delay: 0.3, duration: 0.8, ease: "easeOut" }}
+                  >
+                    <motion.h1
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.5, duration: 0.8 }}
+                    >
+                      {slide.title}
+                    </motion.h1>
+                    <motion.p
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.7, duration: 0.8 }}
+                    >
+                      {slide.description}
+                    </motion.p>
+                    <motion.button
+                      className="btn-shop-now"
+                      onClick={() => navigate('/shop')}
+                      whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
+                      initial={{ y: 20, opacity: 0 }}
+                      animate={{ y: 0, opacity: 1 }}
+                      transition={{ delay: 0.9, duration: 0.8 }}
+                    >
+                      Shop Now
+                    </motion.button>
+                  </motion.div>
+                </div>
+              </motion.div>
+            ))}
+            <motion.button 
+              className="slider-nav prev" 
+              onClick={prevSlide}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
             >
-              <img src={slide.url} alt={slide.title} className="slide-image" />
-              <div className="slide-overlay">
-                <motion.div 
-                  className="slide-content"
-                  initial={{ y: 20, opacity: 0 }}
-                  animate={{ y: 0, opacity: 1 }}
-                  transition={{ delay: 0.2 }}
-                >
-                  <h1>{slide.title}</h1>
-                  <p>{slide.description}</p>
+              ❮
+            </motion.button>
+            <motion.button 
+              className="slider-nav next" 
+              onClick={nextSlide}
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.9 }}
+            >
+              ❯
+            </motion.button>
+            <div className="slider-dots">
+              {slides.map((_, index) => (
+                <motion.button
+                  key={index}
+                  className={`dot ${currentSlide === index ? 'active' : ''}`}
+                  onClick={() => setCurrentSlide(index)}
+                  whileHover={{ scale: 1.2 }}
+                  whileTap={{ scale: 0.9 }}
+                />
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="featured-section" ref={featuredRef}>
+          <motion.h2
+            className="section-title"
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.8, delay: 0.2 }}
+          >
+            Featured Collections
+          </motion.h2>
+          <div className="featured-grid">
+            {featuredItems.map((item, index) => (
+              <motion.div
+                key={index}
+                className={`featured-card ${isInView ? 'visible' : ''}`}
+                initial={{ opacity: 0, y: 50 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.8, delay: index * 0.2 + 0.4 }}
+                whileHover={{ scale: 1.02, y: -15 }}
+              >
+                <div 
+                  className="card-image" 
+                  style={{ backgroundImage: `url(${item.image})` }}
+                />
+                <div className="card-content">
+                  <motion.h3
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.6, delay: index * 0.2 + 0.6 }}
+                  >
+                    {item.title}
+                  </motion.h3>
+                  <motion.p
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.6, delay: index * 0.2 + 0.8 }}
+                  >
+                    {item.description}
+                  </motion.p>
                   <motion.button
-                    className="btn-shop-now"
+                    className="btn-buy-now"
                     onClick={() => navigate('/shop')}
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.6, delay: index * 0.2 + 1 }}
                   >
-                    Shop Now
+                    Buy Now
                   </motion.button>
-                </motion.div>
-              </div>
-            </motion.div>
-          ))}
-          <button className="slider-nav prev" onClick={prevSlide}>❮</button>
-          <button className="slider-nav next" onClick={nextSlide}>❯</button>
-          <div className="slider-dots">
-            {slides.map((_, index) => (
-              <button
-                key={index}
-                className={`dot ${currentSlide === index ? 'active' : ''}`}
-                onClick={() => setCurrentSlide(index)}
-              />
+                </div>
+              </motion.div>
             ))}
           </div>
-        </div>
-      </section>
-
-      <section className="featured-section">
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
-          viewport={{ once: true }}
-          className="section-title"
-        >
-          Featured Collections
-        </motion.h2>
-        <div className="featured-grid">
-          {featuredItems.map((item, index) => (
-            <motion.div
-              key={index}
-              className="featured-card"
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: index * 0.1 }}
-              viewport={{ once: true }}
-              whileHover={{ scale: 1.03 }}
-            >
-              <div 
-                className="card-image" 
-                style={{ backgroundImage: `url(${item.image})` }}
-              />
-              <div className="card-content">
-                <h3>{item.title}</h3>
-                <p>{item.description}</p>
-                <motion.button
-                  className="btn-buy-now"
-                  onClick={() => navigate('/shop')}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Buy Now
-                </motion.button>
-              </div>
-            </motion.div>
-          ))}
-        </div>
-      </section>
-    </div>
+        </section>
+      </div>
+      <Footer />
+    </>
   );
 };
 

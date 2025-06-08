@@ -1,37 +1,37 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
+import { formatPrice } from '../../utils/formatters';
 
 interface Orchid {
   id: number;
   name: string;
-  species: string;
+  description: string;
   price: number;
-  stock: number;
   imageUrl: string;
 }
 
 const OrchidManagement: React.FC = () => {
-  const [orchids, setOrchids] = useState<Orchid[]>([
-    { 
-      id: 1, 
-      name: 'Purple Phalaenopsis', 
-      species: 'Phalaenopsis', 
-      price: 29.99, 
-      stock: 15,
-      imageUrl: '/orchid1.jpg'
-    },
-    { 
-      id: 2, 
-      name: 'Pink Cattleya', 
-      species: 'Cattleya', 
-      price: 39.99, 
-      stock: 10,
-      imageUrl: '/orchid2.jpg'
-    },
-  ]);
+  const [orchids, setOrchids] = useState<Orchid[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentOrchid, setCurrentOrchid] = useState<Orchid | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchOrchids();
+  }, []);
+
+  const fetchOrchids = async () => {
+    try {
+      const response = await fetch('https://68426af6e1347494c31cbc60.mockapi.io/api/orchid/Orchids');
+      const data = await response.json();
+      setOrchids(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching orchids:', error);
+      setLoading(false);
+    }
+  };
 
   const tableVariants = {
     hidden: { opacity: 0 },
@@ -56,6 +56,14 @@ const OrchidManagement: React.FC = () => {
   const handleDelete = (id: number) => {
     setOrchids(orchids.filter(orchid => orchid.id !== id));
   };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="management-container">
@@ -84,9 +92,8 @@ const OrchidManagement: React.FC = () => {
           <tr>
             <th>Image</th>
             <th>Name</th>
-            <th>Species</th>
+            <th>Description</th>
             <th>Price</th>
-            <th>Stock</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -102,12 +109,16 @@ const OrchidManagement: React.FC = () => {
                   src={orchid.imageUrl} 
                   alt={orchid.name} 
                   className="orchid-thumbnail"
+                  style={{ width: '50px', height: '50px', objectFit: 'cover', borderRadius: '8px' }}
                 />
               </td>
               <td>{orchid.name}</td>
-              <td>{orchid.species}</td>
-              <td>${orchid.price.toFixed(2)}</td>
-              <td>{orchid.stock}</td>
+              <td>
+                <div style={{ maxWidth: '300px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                  {orchid.description}
+                </div>
+              </td>
+              <td>{formatPrice(orchid.price)} VND</td>
               <td className="action-buttons">
                 <motion.button
                   className="edit-button"

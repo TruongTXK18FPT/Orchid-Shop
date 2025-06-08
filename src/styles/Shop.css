@@ -8,7 +8,7 @@ body {
 .shop-container {
   max-width: 1500px;
   margin: 0 auto;
-  padding: 2rem;
+  padding: 7rem 2rem 2rem;
 }
 
 .header {
@@ -17,6 +17,8 @@ body {
   background: linear-gradient(135deg, rgba(139, 68, 163, 0.1) 0%, rgba(255, 255, 255, 0.9) 100%);
   border-radius: 20px;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  position: relative;
+  z-index: 1;
 }
 
 .header-content {
@@ -57,7 +59,7 @@ body {
   position: absolute;
   top: 0;
   right: 0;
-  background: #8b44a3;
+  background: #9b4dff;
   color: white;
   width: 24px;
   height: 24px;
@@ -326,6 +328,10 @@ body {
 }
 
 @media (max-width: 600px) {
+  .shop-container {
+    padding: 5rem 1rem 1rem;
+  }
+  
   .orchids-grid {
     grid-template-columns: 1fr;
   }
@@ -675,6 +681,10 @@ body {
   height: 80px;
   object-fit: cover;
   border-radius: 8px;
+  border: 2px solid rgba(139, 68, 163, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: white;
+  padding: 4px;
 }
 
 .cart-item-details h3 {
@@ -714,16 +724,28 @@ body {
   align-items: center;
   justify-content: center;
   transition: all 0.3s ease;
+  font-size: 1.2rem;
+  font-weight: bold;
 }
 
 .quantity-controls button:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+  border-color: #ccc;
+  color: #ccc;
 }
 
 .quantity-controls button:hover:not(:disabled) {
   background: #8b44a3;
   color: white;
+}
+
+.quantity-controls span {
+  min-width: 20px;
+  text-align: center;
+  font-weight: 600;
+  color: #2c3e50;
+  font-size: 1.1rem;
 }
 
 .remove-item {

@@ -1,22 +1,35 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
 
 interface Employee {
-  id: number;
-  name: string;
-  position: string;
+  account_id: string;
+  account_name: string;
   email: string;
-  phone: string;
+  role: string;
 }
 
 const EmployeeManagement: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>([
-    { id: 1, name: 'John Doe', position: 'Manager', email: 'john@example.com', phone: '123-456-7890' },
-    { id: 2, name: 'Jane Smith', position: 'Sales', email: 'jane@example.com', phone: '123-456-7891' },
-  ]);
+  const [employees, setEmployees] = useState<Employee[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchEmployees();
+  }, []);
+
+  const fetchEmployees = async () => {
+    try {
+      const response = await fetch('https://68426af6e1347494c31cbc60.mockapi.io/api/orchid/Accounts');
+      const data = await response.json();
+      setEmployees(data);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching employees:', error);
+      setLoading(false);
+    }
+  };
 
   const tableVariants = {
     hidden: { opacity: 0 },
@@ -38,9 +51,17 @@ const EmployeeManagement: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: number) => {
-    setEmployees(employees.filter(emp => emp.id !== id));
+  const handleDelete = (id: string) => {
+    setEmployees(employees.filter(emp => emp.account_id !== id));
   };
+
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="management-container">
@@ -68,23 +89,21 @@ const EmployeeManagement: React.FC = () => {
         <thead>
           <tr>
             <th>Name</th>
-            <th>Position</th>
             <th>Email</th>
-            <th>Phone</th>
+            <th>Role</th>
             <th>Actions</th>
           </tr>
         </thead>
         <tbody>
           {employees.map((employee) => (
             <motion.tr
-              key={employee.id}
+              key={employee.account_id}
               variants={rowVariants}
               whileHover={{ backgroundColor: 'rgba(155, 77, 255, 0.05)' }}
             >
-              <td>{employee.name}</td>
-              <td>{employee.position}</td>
+              <td>{employee.account_name}</td>
               <td>{employee.email}</td>
-              <td>{employee.phone}</td>
+              <td style={{ textTransform: 'capitalize' }}>{employee.role}</td>
               <td className="action-buttons">
                 <motion.button
                   className="edit-button"
@@ -98,7 +117,7 @@ const EmployeeManagement: React.FC = () => {
                   className="delete-button"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => handleDelete(employee.id)}
+                  onClick={() => handleDelete(employee.account_id)}
                 >
                   <FaTrash />
                 </motion.button>
