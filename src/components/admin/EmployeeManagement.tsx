@@ -1,19 +1,24 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaEdit, FaTrash, FaPlus } from 'react-icons/fa';
-
-interface Employee {
-  account_id: string;
-  account_name: string;
-  email: string;
-  role: string;
-}
+import { FaEdit, FaTrash, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { toast } from 'react-toastify';
+import { adminAPI } from '../../utils/api';
+import type { AccountDTO, CreateAccountRequest, UpdateAccountRequest } from '../../types/orchid';
 
 const EmployeeManagement: React.FC = () => {
-  const [employees, setEmployees] = useState<Employee[]>([]);
+  const [employees, setEmployees] = useState<AccountDTO[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [currentEmployee, setCurrentEmployee] = useState<Employee | null>(null);
+  const [currentEmployee, setCurrentEmployee] = useState<AccountDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
+  
+  // Form state
+  const [formData, setFormData] = useState({
+    accountName: '',
+    email: '',
+    password: '',
+    roleId: 2 // Default to Admin role (roleId 2)
+  });
 
   useEffect(() => {
     fetchEmployees();
@@ -21,12 +26,14 @@ const EmployeeManagement: React.FC = () => {
 
   const fetchEmployees = async () => {
     try {
-      const response = await fetch('https://68426af6e1347494c31cbc60.mockapi.io/api/orchid/Accounts');
-      const data = await response.json();
+      setLoading(true);
+      const data = await adminAPI.getAllAccounts();
       setEmployees(data);
-      setLoading(false);
+      toast.success(`Loaded ${data.length} accounts successfully!`);
     } catch (error) {
       console.error('Error fetching employees:', error);
+      toast.error('Failed to load accounts. Please try again.');
+    } finally {
       setLoading(false);
     }
   };
@@ -46,13 +53,89 @@ const EmployeeManagement: React.FC = () => {
     visible: { opacity: 1, x: 0 }
   };
 
-  const handleEdit = (employee: Employee) => {
+  const handleEdit = (employee: AccountDTO) => {
     setCurrentEmployee(employee);
+    setFormData({
+      accountName: employee.accountName,
+      email: employee.email,
+      password: '',
+      roleId: employee.roleId
+    });
     setIsModalOpen(true);
   };
 
-  const handleDelete = (id: string) => {
-    setEmployees(employees.filter(emp => emp.account_id !== id));
+  const handleAdd = () => {
+    setCurrentEmployee(null);
+    setFormData({
+      accountName: '',
+      email: '',
+      password: '',
+      roleId: 2 // Default to Admin role (roleId 2)
+    });
+    setIsModalOpen(true);
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    if (!formData.accountName.trim() || !formData.email.trim()) {
+      toast.error('Please fill in all required fields');
+      return;
+    }
+
+    if (!currentEmployee && !formData.password.trim()) {
+      toast.error('Password is required for new accounts');
+      return;
+    }
+
+    try {
+      if (currentEmployee) {
+        // Update existing employee
+        const updateData: UpdateAccountRequest = {
+          accountName: formData.accountName,
+          email: formData.email,
+          roleId: formData.roleId,
+          ...(formData.password.trim() && { password: formData.password })
+        };
+        
+        const updatedEmployee = await adminAPI.updateAccount(parseInt(currentEmployee.accountId), updateData);
+        setEmployees(employees.map(emp => 
+          emp.accountId === currentEmployee.accountId ? updatedEmployee : emp
+        ));
+        toast.success('Account updated successfully!');
+      } else {
+        // Create new employee
+        const createData: CreateAccountRequest = {
+          accountName: formData.accountName,
+          email: formData.email,
+          password: formData.password,
+          roleId: formData.roleId
+        };
+        
+        const newEmployee = await adminAPI.createAccount(createData);
+        setEmployees([...employees, newEmployee]);
+        toast.success('Account created successfully!');
+      }
+      
+      setIsModalOpen(false);
+      setFormData({ accountName: '', email: '', password: '', roleId: 2 });
+    } catch (error) {
+      console.error('Error saving account:', error);
+      toast.error(currentEmployee ? 'Failed to update account' : 'Failed to create account');
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm('Are you sure you want to delete this account?')) {
+      try {
+        await adminAPI.deleteAccount(parseInt(id));
+        setEmployees(employees.filter(emp => emp.accountId !== id));
+        toast.success('Account deleted successfully!');
+      } catch (error) {
+        console.error('Error deleting account:', error);
+        toast.error('Failed to delete account. Please try again.');
+      }
+    }
   };
 
   if (loading) {
@@ -66,17 +149,14 @@ const EmployeeManagement: React.FC = () => {
   return (
     <div className="management-container">
       <div className="management-header">
-        <h2>Employee Management</h2>
+        <h2>Account Management</h2>
         <motion.button
           className="add-button"
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          onClick={() => {
-            setCurrentEmployee(null);
-            setIsModalOpen(true);
-          }}
+          onClick={handleAdd}
         >
-          <FaPlus /> Add Employee
+          <FaPlus /> Add Account
         </motion.button>
       </div>
 
@@ -97,13 +177,13 @@ const EmployeeManagement: React.FC = () => {
         <tbody>
           {employees.map((employee) => (
             <motion.tr
-              key={employee.account_id}
+              key={employee.accountId}
               variants={rowVariants}
               whileHover={{ backgroundColor: 'rgba(155, 77, 255, 0.05)' }}
             >
-              <td>{employee.account_name}</td>
+              <td>{employee.accountName}</td>
               <td>{employee.email}</td>
-              <td style={{ textTransform: 'capitalize' }}>{employee.role}</td>
+              <td style={{ textTransform: 'capitalize' }}>{employee.roleName}</td>
               <td className="action-buttons">
                 <motion.button
                   className="edit-button"
@@ -117,7 +197,7 @@ const EmployeeManagement: React.FC = () => {
                   className="delete-button"
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => handleDelete(employee.account_id)}
+                  onClick={() => handleDelete(employee.accountId)}
                 >
                   <FaTrash />
                 </motion.button>
@@ -141,24 +221,90 @@ const EmployeeManagement: React.FC = () => {
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.5, opacity: 0 }}
             >
-              <h3>{currentEmployee ? 'Edit Employee' : 'Add Employee'}</h3>
-              {/* Form content will be added later */}
-              <div className="modal-buttons">
-                <motion.button
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                  onClick={() => setIsModalOpen(false)}
-                >
-                  Cancel
-                </motion.button>
-                <motion.button
-                  className="save-button"
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  Save
-                </motion.button>
-              </div>
+              <h3>{currentEmployee ? 'Edit Account' : 'Add Account'}</h3>
+              <form onSubmit={handleSubmit} className="employee-form">
+                <div className="form-group">
+                  <label htmlFor="accountName">Name *</label>
+                  <input
+                    type="text"
+                    id="accountName"
+                    value={formData.accountName}
+                    onChange={(e) => setFormData({ ...formData, accountName: e.target.value })}
+                    placeholder="Enter account name"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="email">Email *</label>
+                  <input
+                    type="email"
+                    id="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="password">
+                    Password {currentEmployee ? '(leave blank to keep current)' : '*'}
+                  </label>
+                  <div className="password-input-container">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      id="password"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder={currentEmployee ? 'Enter new password' : 'Enter password'}
+                      required={!currentEmployee}
+                    />
+                    <button
+                      type="button"
+                      className="password-toggle"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <FaEyeSlash /> : <FaEye />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label htmlFor="roleId">Role *</label>
+                  <select
+                    id="roleId"
+                    value={formData.roleId}
+                    onChange={(e) => setFormData({ ...formData, roleId: parseInt(e.target.value) })}
+                    required
+                  >
+                    <option value={2}>Admin</option>
+                    <option value={3}>Customer</option>
+                  </select>
+                </div>
+
+                <div className="modal-buttons">
+                  <motion.button
+                    type="button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      setIsModalOpen(false);
+                      setFormData({ accountName: '', email: '', password: '', roleId: 2 });
+                    }}
+                  >
+                    Cancel
+                  </motion.button>
+                  <motion.button
+                    type="submit"
+                    className="save-button"
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                  >
+                    {currentEmployee ? 'Update' : 'Create'} Account
+                  </motion.button>
+                </div>
+              </form>
             </motion.div>
           </motion.div>
         )}

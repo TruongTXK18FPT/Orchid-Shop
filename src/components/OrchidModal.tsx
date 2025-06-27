@@ -39,8 +39,8 @@ const OrchidModal: React.FC<OrchidModalProps> = ({ orchid, isOpen, onClose, onAd
               transition={{ delay: 0.2 }}
             >
               <img 
-                src={orchid.imageUrl} 
-                alt={orchid.name} 
+                src={orchid.orchidUrl} 
+                alt={orchid.orchidName} 
                 className="modal-image"
               />
             </motion.div>
@@ -51,18 +51,20 @@ const OrchidModal: React.FC<OrchidModalProps> = ({ orchid, isOpen, onClose, onAd
               animate={{ x: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <h2>{orchid.name}</h2>
+              <h2>{orchid.orchidName}</h2>
               <div className="modal-price">
                 {formatPrice(orchid.price)} VND
               </div>
               <div className="modal-description">
                 <h3>Description</h3>
-                <p>{orchid.description}</p>
+                <p>{orchid.orchidDescription}</p>
               </div>
               
               <div className="modal-details">
-                <h3>Care Instructions</h3>
+                <h3>Additional Information</h3>
                 <ul>
+                  <li>🌱 Type: {orchid.isNatural ? 'Natural' : 'Hybrid'}</li>
+                  <li>🏷️ Product ID: {orchid.orchidId}</li>
                   <li>🌡️ Temperature: 18-25°C</li>
                   <li>💧 Water: Once a week</li>
                   <li>☀️ Light: Bright, indirect sunlight</li>

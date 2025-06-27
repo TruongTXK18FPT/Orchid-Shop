@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'react-toastify';
 import type { Orchid } from '../types/orchid';
+import { orchidAPI } from '../utils/api';
 import OrchidCard from '../components/OrchidCard';
 import Logo from '../components/Logo';
 import Cart from '../components/Cart';
@@ -17,16 +19,20 @@ const Shop: React.FC = () => {
   const [sortBy, setSortBy] = useState<'name' | 'price'>('name');
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [cartItems, setCartItems] = useState<{ orchid: Orchid; quantity: number }[]>([]);
+  const [filterNatural, setFilterNatural] = useState<'all' | 'natural' | 'hybrid'>('all');
+  const [priceRange, setPriceRange] = useState({ min: 0, max: 10000000 });
 
   useEffect(() => {
     const fetchOrchids = async () => {
       try {
-        const response = await fetch('https://68426af6e1347494c31cbc60.mockapi.io/api/orchid/Orchids');
-        const data = await response.json();
+        setLoading(true);
+        const data = await orchidAPI.getAllOrchids();
         setOrchids(data);
-        setLoading(false);
+        toast.success(`Loaded ${data.length} orchids successfully!`);
       } catch (error) {
         console.error('Error fetching orchids:', error);
+        toast.error('Failed to load orchids. Please try again.');
+      } finally {
         setLoading(false);
       }
     };
@@ -36,22 +42,23 @@ const Shop: React.FC = () => {
 
   const handleAddToCart = (orchid: Orchid) => {
     setCartItems(prevItems => {
-      const existingItem = prevItems.find(item => item.orchid.id === orchid.id);
+      const existingItem = prevItems.find(item => item.orchid.orchidId === orchid.orchidId);
       if (existingItem) {
         return prevItems.map(item =>
-          item.orchid.id === orchid.id
+          item.orchid.orchidId === orchid.orchidId
             ? { ...item, quantity: item.quantity + 1 }
             : item
         );
       }
       return [...prevItems, { orchid, quantity: 1 }];
     });
+    toast.success(`Added ${orchid.orchidName} to cart!`);
   };
 
   const handleUpdateQuantity = (orchidId: number, change: number) => {
     setCartItems(prevItems =>
       prevItems.map(item =>
-        item.orchid.id === orchidId
+        item.orchid.orchidId === orchidId
           ? { ...item, quantity: Math.max(1, item.quantity + change) }
           : item
       )
@@ -59,19 +66,30 @@ const Shop: React.FC = () => {
   };
 
   const handleRemoveItem = (orchidId: number) => {
-    setCartItems(prevItems => prevItems.filter(item => item.orchid.id !== orchidId));
+    setCartItems(prevItems => prevItems.filter(item => item.orchid.orchidId !== orchidId));
   };
 
   const filteredAndSortedOrchids = orchids
-    .filter(orchid => 
-      orchid.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      orchid.description.toLowerCase().includes(searchTerm.toLowerCase())
-    )
+    .filter(orchid => {
+      // Text search filter
+      const matchesSearch = orchid.orchidName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        orchid.orchidDescription.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      // Natural/Hybrid filter
+      const matchesNaturalFilter = filterNatural === 'all' || 
+        (filterNatural === 'natural' && orchid.isNatural) ||
+        (filterNatural === 'hybrid' && !orchid.isNatural);
+      
+      // Price range filter
+      const matchesPriceRange = orchid.price >= priceRange.min && orchid.price <= priceRange.max;
+      
+      return matchesSearch && matchesNaturalFilter && matchesPriceRange;
+    })
     .sort((a, b) => {
       if (sortBy === 'name') {
         return sortOrder === 'asc' 
-          ? a.name.localeCompare(b.name)
-          : b.name.localeCompare(a.name);
+          ? a.orchidName.localeCompare(b.orchidName)
+          : b.orchidName.localeCompare(a.orchidName);
       } else {
         return sortOrder === 'asc'
           ? a.price - b.price
@@ -154,6 +172,64 @@ const Shop: React.FC = () => {
           <span className="search-icon">🔍</span>
         </div>
 
+        <div className="filter-controls">
+          <select 
+            className="filter-select"
+            value={filterNatural}
+            onChange={(e) => {
+              setFilterNatural(e.target.value as 'all' | 'natural' | 'hybrid');
+              setCurrentPage(1);
+            }}
+          >
+            <option value="all">All Types</option>
+            <option value="natural">Natural Only</option>
+            <option value="hybrid">Hybrid Only</option>
+          </select>
+
+          <div className="price-range-filter">
+            <span className="price-label">Price Range (VND):</span>
+            <div className="price-inputs">
+              <input
+                type="number"
+                placeholder="Min"
+                value={priceRange.min}
+                onChange={(e) => {
+                  setPriceRange(prev => ({ ...prev, min: Number(e.target.value) || 0 }));
+                  setCurrentPage(1);
+                }}
+                className="price-input"
+                aria-label="Minimum price"
+              />
+              <span>-</span>
+              <input
+                type="number"
+                placeholder="Max"
+                value={priceRange.max}
+                onChange={(e) => {
+                  setPriceRange(prev => ({ ...prev, max: Number(e.target.value) || 10000000 }));
+                  setCurrentPage(1);
+                }}
+                className="price-input"
+                aria-label="Maximum price"
+              />
+            </div>
+          </div>
+
+          <motion.button
+            className="clear-filters-btn"
+            onClick={() => {
+              setSearchTerm('');
+              setFilterNatural('all');
+              setPriceRange({ min: 0, max: 10000000 });
+              setCurrentPage(1);
+            }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
+          >
+            Clear Filters
+          </motion.button>
+        </div>
+
         <div className="sort-controls">
           <select 
             className="sort-select"
@@ -184,6 +260,14 @@ const Shop: React.FC = () => {
         </motion.div>
       ) : (
         <>
+          <div className="results-info">
+            <p>
+              Showing {paginatedOrchids.length} of {filteredAndSortedOrchids.length} orchids
+              {searchTerm && ` for "${searchTerm}"`}
+              {filterNatural !== 'all' && ` (${filterNatural} only)`}
+            </p>
+          </div>
+
           <motion.div 
             className="orchids-grid"
             initial={{ opacity: 0 }}
@@ -193,7 +277,7 @@ const Shop: React.FC = () => {
             <AnimatePresence>
               {paginatedOrchids.map((orchid) => (
                 <OrchidCard 
-                  key={orchid.id} 
+                  key={orchid.orchidId} 
                   orchid={orchid} 
                   onAddToCart={() => handleAddToCart(orchid)}
                 />

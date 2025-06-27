@@ -54,6 +54,77 @@ button:focus-visible {
   outline: 4px auto -webkit-focus-ring-color;
 }
 
+/* Custom Toast Styles */
+.Toastify__toast-container {
+  z-index: 9999;
+}
+
+.Toastify__toast {
+  border-radius: 12px;
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-size: 14px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.Toastify__toast--success {
+  background: linear-gradient(135deg, #4CAF50, #45a049);
+  color: white;
+}
+
+.Toastify__toast--error {
+  background: linear-gradient(135deg, #f44336, #d32f2f);
+  color: white;
+}
+
+.Toastify__toast--info {
+  background: linear-gradient(135deg, #2196F3, #1976d2);
+  color: white;
+}
+
+.Toastify__toast--warning {
+  background: linear-gradient(135deg, #ff9800, #f57c00);
+  color: white;
+}
+
+.Toastify__progress-bar {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+.Toastify__close-button {
+  color: rgba(255, 255, 255, 0.8);
+  opacity: 0.7;
+}
+
+.Toastify__close-button:hover {
+  opacity: 1;
+}
+
+/* Dark theme for toasts */
+@media (prefers-color-scheme: dark) {
+  .Toastify__toast {
+    background: #2d2d2d;
+    color: #ffffff;
+    border: 1px solid #444;
+  }
+  
+  .Toastify__toast--success {
+    background: linear-gradient(135deg, #4CAF50, #388e3c);
+  }
+  
+  .Toastify__toast--error {
+    background: linear-gradient(135deg, #f44336, #c62828);
+  }
+  
+  .Toastify__toast--info {
+    background: linear-gradient(135deg, #2196F3, #1565c0);
+  }
+  
+  .Toastify__toast--warning {
+    background: linear-gradient(135deg, #ff9800, #ef6c00);
+  }
+}
+
 @media (prefers-color-scheme: light) {
   :root {
     color: #213547;

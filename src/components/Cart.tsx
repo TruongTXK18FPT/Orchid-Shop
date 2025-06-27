@@ -1,16 +1,24 @@
 import React from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
-import type { Orchid } from '../types/orchid';
+import type { Orchid, CartItemDTO } from '../types/orchid';
 import { formatPrice } from '../utils/formatters';
 
+// Union type to handle both old and new cart structures
+type CartItemUnion = CartItemDTO | { orchid: Orchid; quantity: number };
+
 interface CartProps {
-  items: { orchid: Orchid; quantity: number }[];
+  items: CartItemUnion[];
   isOpen: boolean;
   onClose: () => void;
   onUpdateQuantity: (orchidId: number, change: number) => void;
   onRemoveItem: (orchidId: number) => void;
 }
+
+// Type guard to check if item is CartItemDTO
+const isCartItemDTO = (item: CartItemUnion): item is CartItemDTO => {
+  return 'orchidId' in item && 'orchidName' in item;
+};
 
 const Cart: React.FC<CartProps> = ({ 
   items, 
@@ -20,11 +28,45 @@ const Cart: React.FC<CartProps> = ({
   onRemoveItem 
 }) => {
   const navigate = useNavigate();
-  const total = items.reduce((sum, item) => sum + item.orchid.price * item.quantity, 0);
+  
+  // Calculate total based on item type
+  const total = items.reduce((sum, item) => {
+    if (isCartItemDTO(item)) {
+      return sum + item.subtotal;
+    } else {
+      return sum + item.orchid.price * item.quantity;
+    }
+  }, 0);
 
   const handleCheckout = () => {
     onClose();
-    navigate('/order', { state: { items } });
+    // Convert any item type to OrderItem format for the Order page
+    const orderItems = items.map(item => {
+      if (isCartItemDTO(item)) {
+        return {
+          orchid: {
+            orchidId: item.orchidId,
+            orchidName: item.orchidName,
+            orchidDescription: '',
+            price: item.price,
+            orchidUrl: item.orchidUrl,
+            isNatural: false,
+            categoryId: undefined,
+            categoryName: undefined
+          } as Orchid,
+          quantity: item.quantity
+        };
+      } else {
+        return {
+          orchid: item.orchid,
+          quantity: item.quantity
+        };
+      }
+    });
+    
+    console.log('Cart - Navigating to order with items:', orderItems);
+    console.log('Cart - Original items:', items);
+    navigate('/order', { state: { items: orderItems, fromCart: true } });
   };
 
   if (!isOpen) return null;
@@ -66,41 +108,50 @@ const Cart: React.FC<CartProps> = ({
               </motion.div>
             ) : (
               <AnimatePresence>
-                {items.map(({ orchid, quantity }) => (
-                  <motion.div
-                    key={orchid.id}
-                    className="cart-item"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -20 }}
-                  >
-                    <img src={orchid.imageUrl} alt={orchid.name} className="cart-item-image" />
-                    <div className="cart-item-details">
-                      <h3>{orchid.name}</h3>
-                      <p className="cart-item-price">{formatPrice(orchid.price)} VND</p>
-                    </div>
-                    <div className="cart-item-actions">
-                      <div className="quantity-controls">
+                {items.map((item) => {
+                  // Extract values based on item type
+                  const orchidId = isCartItemDTO(item) ? item.orchidId : item.orchid.orchidId;
+                  const orchidName = isCartItemDTO(item) ? item.orchidName : item.orchid.orchidName;
+                  const orchidUrl = isCartItemDTO(item) ? item.orchidUrl : item.orchid.orchidUrl;
+                  const price = isCartItemDTO(item) ? item.price : item.orchid.price;
+                  const quantity = item.quantity;
+
+                  return (
+                    <motion.div
+                      key={`cart-item-${orchidId}`}
+                      className="cart-item"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -20 }}
+                    >
+                      <img src={orchidUrl} alt={orchidName} className="cart-item-image" />
+                      <div className="cart-item-details">
+                        <h3>{orchidName}</h3>
+                        <p className="cart-item-price">{formatPrice(price)} VND</p>
+                      </div>
+                      <div className="cart-item-actions">
+                        <div className="quantity-controls">
+                          <button 
+                            onClick={() => onUpdateQuantity(orchidId, -1)}
+                            disabled={quantity <= 1}
+                          >
+                            -
+                          </button>
+                          <span>{quantity}</span>
+                          <button onClick={() => onUpdateQuantity(orchidId, 1)}>
+                            +
+                          </button>
+                        </div>
                         <button 
-                          onClick={() => onUpdateQuantity(orchid.id, -1)}
-                          disabled={quantity <= 1}
+                          className="remove-item"
+                          onClick={() => onRemoveItem(orchidId)}
                         >
-                          -
-                        </button>
-                        <span>{quantity}</span>
-                        <button onClick={() => onUpdateQuantity(orchid.id, 1)}>
-                          +
+                          🗑️
                         </button>
                       </div>
-                      <button 
-                        className="remove-item"
-                        onClick={() => onRemoveItem(orchid.id)}
-                      >
-                        🗑️
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
+                    </motion.div>
+                  );
+                })}
               </AnimatePresence>
             )}
           </div>

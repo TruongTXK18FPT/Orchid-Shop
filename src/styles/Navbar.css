@@ -162,6 +162,69 @@
   background: rgba(155, 77, 255, 0.1);
 }
 
+/* Logout button styles */
+.nav-link button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.nav-link button:hover {
+  color: #ef4444;
+}
+
+.nav-link button[data-logout="true"] {
+  color: white !important;
+  background: #ef4444 !important;
+  padding: 0.5rem 1rem !important;
+  border-radius: 8px !important;
+  border: 2px solid #ef4444 !important;
+}
+
+.nav-link button[data-logout="true"]:hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+  color: white !important;
+}
+
+.mobile-nav-link button {
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  cursor: pointer;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  text-align: left;
+}
+
+.mobile-nav-link button:hover {
+  color: #ef4444;
+}
+
+.mobile-nav-link button[data-logout="true"] {
+  color: white !important;
+  background: #ef4444 !important;
+  border-radius: 8px !important;
+  margin: 0.5rem !important;
+  padding: 0.75rem 1rem !important;
+}
+
+.mobile-nav-link button[data-logout="true"]:hover {
+  background: #dc2626 !important;
+  color: white !important;
+}
+
 @media (max-width: 768px) {
   .nav-container {
     padding: 1rem;
@@ -200,4 +263,4 @@
   .nav-container {
     padding: 0.6rem 1rem;
   }
-} 
+}

@@ -27,8 +27,8 @@ const OrchidCard: React.FC<OrchidCardProps> = ({ orchid, onAddToCart }) => {
       >
         <motion.div className="image-container">
           <motion.img
-            src={orchid.imageUrl}
-            alt={orchid.name}
+            src={orchid.orchidUrl}
+            alt={orchid.orchidName}
             className="orchid-image"
             whileHover={{ scale: 1.08 }}
             transition={{ type: "spring", stiffness: 300 }}
@@ -50,11 +50,11 @@ const OrchidCard: React.FC<OrchidCardProps> = ({ orchid, onAddToCart }) => {
           animate={{ opacity: 1 }}
           transition={{ delay: 0.2 }}
         >
-          <h3>{orchid.name}</h3>
+          <h3>{orchid.orchidName}</h3>
           <p className="description-preview">
-            {orchid.description.length > 100 
-              ? `${orchid.description.substring(0, 100)}...` 
-              : orchid.description}
+            {orchid.orchidDescription.length > 100 
+              ? `${orchid.orchidDescription.substring(0, 100)}...` 
+              : orchid.orchidDescription}
           </p>
           <div className="card-buttons">
             <motion.button

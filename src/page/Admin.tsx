@@ -49,7 +49,7 @@ const Admin: React.FC = () => {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
         >
-          Employee Management
+          Account Management
         </motion.button>
         <motion.button
           className={`tab-button ${activeTab === 'orchids' ? 'active' : ''}`}

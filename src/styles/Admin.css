@@ -5,6 +5,33 @@
   box-sizing: border-box;
 }
 
+/* Override global dark theme for admin page */
+.admin-container * {
+  color: #333 !important;
+}
+
+.admin-container .tab-button.active {
+  color: white !important; /* Keep white text on active purple buttons */
+}
+
+.admin-container .add-button {
+  color: white !important; /* Keep white text on purple buttons */
+}
+
+.admin-container .save-button {
+  color: white !important; /* Keep white text on purple buttons */
+}
+
+.admin-container .edit-button,
+.admin-container .delete-button,
+.admin-container .view-button {
+  color: white !important; /* Keep white text on colored action buttons */
+}
+
+.admin-container .modal-buttons button[type="submit"] {
+  color: white !important; /* Keep white text on submit buttons */
+}
+
 body {
   overflow-y: auto;
 }
@@ -41,9 +68,7 @@ body {
 .admin-header h1 {
   font-size: 3rem;
   margin-bottom: 1rem;
-  background: linear-gradient(45deg, #9b4dff, #7b3cb8);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: #333;
   text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
   font-weight: 700;
   letter-spacing: -1px;
@@ -56,6 +81,50 @@ body {
   max-width: 600px;
   margin: 0 auto;
   line-height: 1.6;
+}
+
+/* Additional specific color overrides */
+.admin-container input::placeholder {
+  color: #999 !important;
+}
+
+.admin-container .password-toggle {
+  color: #666 !important;
+}
+
+.admin-container .modal-backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.admin-container .modal {
+  background: white !important;
+  color: #333 !important;
+  padding: 2.5rem;
+  border-radius: 16px;
+  width: 90%;
+  max-width: 600px;
+  max-height: 80vh; /* Limit modal height */
+  overflow-y: auto; /* Add vertical scrollbar when needed */
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+}
+
+.admin-container .management-table th {
+  color: #444 !important;
+}
+
+.admin-container .management-table td {
+  color: #555 !important;
+}
+
+.admin-container .form-group label {
+  color: #333 !important;
+}
+
+.admin-container .form-group input,
+.admin-container .form-group select,
+.admin-container .form-group textarea {
+  color: #333 !important;
+  background: white !important;
 }
 
 .admin-tabs {
@@ -115,13 +184,55 @@ body {
   border-bottom: 2px solid rgba(155, 77, 255, 0.1);
 }
 
+.header-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
 .management-header h2 {
-  color: #2d2d2d;
+  color: #333;
   font-size: 2rem;
   font-weight: 700;
-  background: linear-gradient(45deg, #333, #666);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+}
+
+.connection-status {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.4rem 0.8rem;
+  border-radius: 20px;
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.connection-status.connected {
+  color: #4caf50 !important;
+  border-color: rgba(76, 175, 80, 0.3);
+  background: rgba(76, 175, 80, 0.1);
+}
+
+.connection-status.disconnected {
+  color: #f44336 !important;
+  border-color: rgba(244, 67, 54, 0.3);
+  background: rgba(244, 67, 54, 0.1);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }
 
 .add-button {
@@ -156,7 +267,7 @@ body {
 
 .management-table th {
   background: rgba(155, 77, 255, 0.08);
-  color: #444;
+  color: #444 !important; /* Force dark text color */
   padding: 1.2rem 1.5rem;
   text-align: left;
   font-weight: 600;
@@ -171,7 +282,7 @@ body {
   background: white;
   border-bottom: 1px solid rgba(0, 0, 0, 0.05);
   font-size: 1rem;
-  color: #555;
+  color: #555 !important; /* Force dark text color */
 }
 
 .management-table tr:hover td {
@@ -192,18 +303,19 @@ body {
   gap: 0.8rem;
 }
 
-.edit-button, .delete-button {
+.edit-button, .delete-button, .view-button, .convert-button {
   padding: 0.8rem;
   border: none;
   border-radius: 8px;
   cursor: pointer;
   transition: all 0.3s ease;
   font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .edit-button {
   background: rgba(155, 77, 255, 0.1);
-  color: #9b4dff;
+  color: #9b4dff !important;
 }
 
 .edit-button:hover {
@@ -213,11 +325,31 @@ body {
 
 .delete-button {
   background: rgba(255, 77, 77, 0.1);
-  color: #ff4d4d;
+  color: #ff4d4d !important;
 }
 
 .delete-button:hover {
   background: rgba(255, 77, 77, 0.2);
+  transform: translateY(-2px);
+}
+
+.view-button {
+  background: rgba(34, 139, 34, 0.1);
+  color: #228b22 !important;
+}
+
+.view-button:hover {
+  background: rgba(34, 139, 34, 0.2);
+  transform: translateY(-2px);
+}
+
+.convert-button {
+  background: rgba(255, 140, 0, 0.1);
+  color: #ff8c00 !important;
+}
+
+.convert-button:hover {
+  background: rgba(255, 140, 0, 0.2);
   transform: translateY(-2px);
 }
 
@@ -242,17 +374,17 @@ body {
   border-radius: 16px;
   width: 90%;
   max-width: 600px;
+  max-height: 80vh; /* Limit modal height */
+  overflow-y: auto; /* Add vertical scrollbar when needed */
   box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .modal h3 {
-  color: #333;
+  color: #333 !important; /* Force dark text color */
   margin-bottom: 2rem;
   font-size: 1.8rem;
   font-weight: 700;
-  background: linear-gradient(45deg, #333, #666);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  text-align: center;
 }
 
 .modal-buttons {
@@ -264,8 +396,10 @@ body {
 
 .modal-buttons button {
   padding: 1rem 2rem;
-  border: none;
+  border: 2px solid #ddd;
   border-radius: 12px;
+  background: white;
+  color: #666 !important; /* Force dark text color */
   font-size: 1.1rem;
   font-weight: 600;
   cursor: pointer;
@@ -274,15 +408,141 @@ body {
   letter-spacing: 0.5px;
 }
 
+.modal-buttons button:hover {
+  border-color: #9b4dff;
+  color: #9b4dff !important; /* Force dark text color on hover */
+}
+
 .modal-buttons .save-button {
   background: linear-gradient(135deg, #9b4dff, #7b3cb8);
-  color: white;
+  color: white !important; /* White text on purple background */
+  border-color: #9b4dff;
   box-shadow: 0 4px 15px rgba(155, 77, 255, 0.2);
 }
 
 .modal-buttons .save-button:hover {
+  background: linear-gradient(135deg, #8a3fff, #6b2ca6);
+  border-color: #8a3fff;
+  color: white !important; /* Maintain white text on hover */
   transform: translateY(-2px);
   box-shadow: 0 6px 20px rgba(155, 77, 255, 0.3);
+}
+
+/* Form Styles */
+.employee-form,
+.orchid-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 500px;
+  margin: 0 auto;
+  color: #333; /* Ensure text is dark */
+  max-height: 60vh; /* Limit form height */
+  overflow-y: auto; /* Add scrollbar for long forms */
+  padding-right: 0.5rem; /* Account for scrollbar */
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #333 !important; /* Force dark text color */
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 0.75rem;
+  border: 2px solid #e0e0e0;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: white;
+  color: #333 !important; /* Force dark text color */
+}
+
+.form-group input::placeholder {
+  color: #999 !important; /* Ensure placeholder is visible */
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #9b4dff;
+  box-shadow: 0 0 0 3px rgba(155, 77, 255, 0.1);
+  color: #333 !important; /* Maintain dark text on focus */
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+}
+
+.password-input-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.password-input-container input {
+  padding-right: 3rem;
+  width: 100%;
+}
+
+.password-toggle {
+  position: absolute;
+  right: 0.75rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #666;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.password-toggle:hover {
+  color: #9b4dff;
+}
+
+/* Custom scrollbar styles */
+.modal::-webkit-scrollbar,
+.employee-form::-webkit-scrollbar,
+.orchid-form::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal::-webkit-scrollbar-track,
+.employee-form::-webkit-scrollbar-track,
+.orchid-form::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.modal::-webkit-scrollbar-thumb,
+.employee-form::-webkit-scrollbar-thumb,
+.orchid-form::-webkit-scrollbar-thumb {
+  background: #9b4dff;
+  border-radius: 3px;
+}
+
+.modal::-webkit-scrollbar-thumb:hover,
+.employee-form::-webkit-scrollbar-thumb:hover,
+.orchid-form::-webkit-scrollbar-thumb:hover {
+  background: #7b3cb8;
 }
 
 /* Responsive Design */
@@ -328,6 +588,24 @@ body {
   .tab-button {
     padding: 0.8rem 1.5rem;
     font-size: 1rem;
+  }
+
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+  
+  .modal {
+    padding: 1rem;
+    margin: 1rem;
+    max-width: calc(100vw - 2rem);
+  }
+  
+  .modal-buttons {
+    flex-direction: column;
+  }
+  
+  .modal-buttons button {
+    width: 100%;
   }
 }
 
@@ -401,4 +679,233 @@ body {
 
 .view-button:hover {
   background-color: #46b8da;
-} 
+}
+
+/* Add Item button styling */
+.add-item-button {
+  background-color: #d9534f !important;
+  color: white !important;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background-color 0.2s ease;
+}
+
+.add-item-button:hover {
+  background-color: #c9302c !important;
+}
+
+/* Remove detail button (trash) styling */
+.remove-detail-button {
+  background-color: #d9534f !important;
+  color: white !important;
+  border: none;
+  padding: 0.5rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-left: 0.5rem;
+  transition: background-color 0.2s ease;
+  min-width: 40px;
+  height: 40px;
+}
+
+.remove-detail-button:hover {
+  background-color: #c9302c !important;
+}
+
+.remove-detail-button svg {
+  font-size: 1rem;
+}
+
+/* Add Order Modal Specific Styles */
+.add-order-modal {
+  max-width: 700px;
+}
+
+.add-order-modal .form-group {
+  margin-bottom: 1rem;
+}
+
+.add-order-modal .order-details-section {
+  border: 2px solid #e0e0e0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1rem 0;
+  background: rgba(155, 77, 255, 0.02);
+}
+
+.add-order-modal .section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.add-order-modal .section-header h4 {
+  color: #333 !important;
+  font-size: 1.2rem;
+  font-weight: 600;
+  margin: 0;
+}
+
+.add-order-modal .order-detail-item {
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  background: white;
+}
+
+.add-order-modal .order-detail-item:last-child {
+  margin-bottom: 0;
+}
+
+.add-order-modal .order-detail-row {
+  display: grid;
+  grid-template-columns: 2fr 100px 150px 50px;
+  gap: 1rem;
+  align-items: end;
+}
+
+.add-order-modal .orchid-select {
+  min-width: 0;
+}
+
+.add-order-modal .selected-orchid-info {
+  margin-top: 0.5rem;
+}
+
+.add-order-modal .selected-orchid-info small {
+  color: #9b4dff !important;
+  font-weight: 600;
+  background: rgba(155, 77, 255, 0.1);
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.add-order-modal .quantity-input input {
+  width: 80px;
+  text-align: center;
+}
+
+.add-order-modal .price-input input {
+  width: 140px;
+  font-size: 0.9rem;
+}
+
+.add-order-modal .remove-button-container {
+  display: flex;
+  justify-content: center;
+  align-items: flex-end;
+}
+
+/* Responsive adjustments for smaller screens */
+@media (max-width: 768px) {
+  .add-order-modal .order-detail-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+  
+  .add-order-modal .quantity-input input,
+  .add-order-modal .price-input input {
+    width: 100%;
+  }
+  
+  .add-order-modal .remove-button-container {
+    justify-content: flex-end;
+    margin-top: 0.5rem;
+  }
+}
+
+.add-order-modal .add-item-button {
+  background: linear-gradient(135deg, #9b4dff, #7b3cb8);
+  color: white !important;
+  border: none;
+  border-radius: 8px;
+  padding: 0.8rem 1.5rem;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.add-order-modal .add-item-button:hover {
+  background: linear-gradient(135deg, #8a3fff, #6b2ca6);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(155, 77, 255, 0.3);
+}
+
+.add-order-modal .remove-detail-button {
+  background: linear-gradient(135deg, #ff4d4d, #e43c3c);
+  color: white !important;
+  border: none;
+  border-radius: 6px;
+  padding: 0.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  margin-left: auto;
+}
+
+.add-order-modal .remove-detail-button:hover {
+  background: linear-gradient(135deg, #e43c3c, #d32f2f);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(255, 77, 77, 0.3);
+}
+
+.add-order-modal .subtotal {
+  text-align: right;
+  color: #666 !important;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid #e0e0e0;
+}
+
+.add-order-modal .total-amount {
+  background: rgba(155, 77, 255, 0.05);
+  border: 2px solid rgba(155, 77, 255, 0.1);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin: 1.5rem 0;
+  text-align: center;
+}
+
+.add-order-modal .total-amount strong {
+  color: #9b4dff !important;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* Modal submit button override */
+.add-order-modal .modal-buttons button[type="submit"] {
+  background: linear-gradient(135deg, #9b4dff, #7b3cb8);
+  color: white !important;
+  border-color: #9b4dff;
+  box-shadow: 0 4px 15px rgba(155, 77, 255, 0.2);
+}
+
+.add-order-modal .modal-buttons button[type="submit"]:hover {
+  background: linear-gradient(135deg, #8a3fff, #6b2ca6);
+  border-color: #8a3fff;
+  color: white !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(155, 77, 255, 0.3);
+}

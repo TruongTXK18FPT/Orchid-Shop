@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Home, ShoppingBag, User, Menu, X, Sparkles, Settings } from 'lucide-react';
+import { Home, ShoppingBag, User, Menu, X, Sparkles, Settings, LogOut } from 'lucide-react';
+import { useAuth } from '../contexts/AuthContext';
+import { authAPI } from '../utils/api';
 import logoOrchid from '../assets/LogoOrchid.jpeg';
 import '../styles/Navbar.css';
 
@@ -9,6 +11,20 @@ const Navbar: React.FC = () => {
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const { isAuthenticated, isAdmin, logout } = useAuth();
+
+  const handleLogout = async () => {
+    try {
+      await authAPI.logout();
+      logout();
+      navigate('/');
+    } catch (error) {
+      console.error('Logout error:', error);
+      logout(); // Logout locally even if API call fails
+      navigate('/');
+    }
+  };
 
   useEffect(() => {
     const handleScroll = () => {
@@ -68,11 +84,22 @@ const Navbar: React.FC = () => {
     }
   };
 
-  const navItems = [
+  const navItems: Array<{
+    name: string;
+    icon: any;
+    path: string;
+    onClick?: () => void;
+  }> = [
     { name: 'Home', icon: Home, path: '/' },
     { name: 'Shop', icon: ShoppingBag, path: '/shop' },
-    { name: 'Login', icon: User, path: '/login' },
-    { name: 'Admin(Demo)', icon: Settings, path: '/admin' }
+    ...(isAuthenticated 
+      ? [
+          { name: 'Profile', icon: User, path: '/profile' },
+          ...(isAdmin ? [{ name: 'Admin', icon: Settings, path: '/admin' }] : []),
+          { name: 'Logout', icon: LogOut, path: '#', onClick: handleLogout }
+        ]
+      : [{ name: 'Login', icon: User, path: '/login' }]
+    )
   ];
 
   return (
@@ -117,7 +144,7 @@ const Navbar: React.FC = () => {
 
         {/* Desktop Navigation */}
         <div className="nav-links desktop-nav">
-          {navItems.map((item, index) => {
+          {navItems.map((item) => {
             const IconComponent = item.icon;
             const isActive = location.pathname === item.path;
             
@@ -128,27 +155,44 @@ const Navbar: React.FC = () => {
                 whileHover={{ y: -2 }}
                 whileTap={{ y: 0 }}
               >
-                <Link 
-                  to={item.path}
-                  className={`nav-link ${isActive ? 'active' : ''}`}
-                >
-                  <motion.div
-                    className="nav-icon"
-                    animate={isActive ? { scale: [1, 1.2, 1] } : {}}
-                    transition={{ duration: 0.3 }}
+                {item.onClick ? (
+                  <button 
+                    onClick={item.onClick}
+                    className={`nav-link ${isActive ? 'active' : ''}`}
+                    data-logout={item.name === 'Logout' ? 'true' : undefined}
                   >
-                    <IconComponent />
-                  </motion.div>
-                  <span>{item.name}</span>
-                  
-                  {isActive && (
                     <motion.div
-                      className="active-indicator"
-                      layoutId="activeIndicator"
-                      transition={{ type: "spring", stiffness: 300, damping: 30 }}
-                    />
-                  )}
-                </Link>
+                      className="nav-icon"
+                      animate={isActive ? { scale: [1, 1.2, 1] } : {}}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <IconComponent />
+                    </motion.div>
+                    <span>{item.name}</span>
+                  </button>
+                ) : (
+                  <Link 
+                    to={item.path}
+                    className={`nav-link ${isActive ? 'active' : ''}`}
+                  >
+                    <motion.div
+                      className="nav-icon"
+                      animate={isActive ? { scale: [1, 1.2, 1] } : {}}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <IconComponent />
+                    </motion.div>
+                    <span>{item.name}</span>
+                    
+                    {isActive && (
+                      <motion.div
+                        className="active-indicator"
+                        layoutId="activeIndicator"
+                        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                      />
+                    )}
+                  </Link>
+                )}
               </motion.div>
             );
           })}
@@ -207,14 +251,28 @@ const Navbar: React.FC = () => {
                   animate={{ x: 0, opacity: 1 }}
                   transition={{ delay: index * 0.1 }}
                 >
-                  <Link 
-                    to={item.path}
-                    className={`mobile-nav-link ${isActive ? 'active' : ''}`}
-                    onClick={() => setIsMobileMenuOpen(false)}
-                  >
-                    <IconComponent />
-                    <span>{item.name}</span>
-                  </Link>
+                  {item.onClick ? (
+                    <button
+                      onClick={() => {
+                        item.onClick?.();
+                        setIsMobileMenuOpen(false);
+                      }}
+                      className={`mobile-nav-link ${isActive ? 'active' : ''}`}
+                      data-logout={item.name === 'Logout' ? 'true' : undefined}
+                    >
+                      <IconComponent />
+                      <span>{item.name}</span>
+                    </button>
+                  ) : (
+                    <Link 
+                      to={item.path}
+                      className={`mobile-nav-link ${isActive ? 'active' : ''}`}
+                      onClick={() => setIsMobileMenuOpen(false)}
+                    >
+                      <IconComponent />
+                      <span>{item.name}</span>
+                    </Link>
+                  )}
                 </motion.div>
               );
             })}
