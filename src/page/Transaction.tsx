@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate } from 'react-router-dom';
 import { toast } from 'react-toastify';
-import { FaArrowLeft, FaBox, FaTruck, FaCheckCircle, FaTimesCircle, FaClock, FaCalendar, FaCreditCard, FaUser } from 'react-icons/fa';
+import { FaArrowLeft, FaBox, FaTruck, FaCheckCircle, FaTimesCircle, FaClock, FaCalendar, FaCreditCard, FaUser, FaExclamationTriangle } from 'react-icons/fa';
 import { orderAPI } from '../utils/api';
 import { formatPrice } from '../utils/formatters';
 import type { OrderDTO } from '../types/orchid';
@@ -13,6 +13,8 @@ const Transaction: React.FC = () => {
   const navigate = useNavigate();
   const [order, setOrder] = useState<OrderDTO | null>(null);
   const [loading, setLoading] = useState(true);
+  const [cancellingOrder, setCancellingOrder] = useState(false);
+  const [showCancelModal, setShowCancelModal] = useState(false);
 
   useEffect(() => {
     if (orderId) {
@@ -134,6 +136,80 @@ const Transaction: React.FC = () => {
     const statuses = ['pending', 'processing', 'shipped', 'delivered'];
     const currentIndex = statuses.indexOf(status.toLowerCase());
     return currentIndex >= 0 ? ((currentIndex + 1) / statuses.length) * 100 : 0;
+  };
+
+  const handleCancelOrder = async () => {
+    if (!order || !orderId) return;
+
+    // Validate order status - prevent cancelling shipped/delivered orders
+    const nonCancellableStatuses = ['shipped', 'delivered', 'cancelled'];
+    if (nonCancellableStatuses.includes(order.orderStatus.toLowerCase())) {
+      toast.error(
+        `Cannot cancel order with status "${order.orderStatus}". Only pending or processing orders can be cancelled.`,
+        { autoClose: 4000 }
+      );
+      return;
+    }
+
+    // Show custom confirmation modal
+    setShowCancelModal(true);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!order) return;
+
+    try {
+      setCancellingOrder(true);
+      setShowCancelModal(false);
+      
+      // Check if this is a temporary order
+      if (order.id > 1000000) {
+        // Handle temporary order cancellation
+        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+        const updatedTempOrders = tempOrders.map((tempOrder: OrderDTO) => 
+          tempOrder.id === order.id 
+            ? { ...tempOrder, orderStatus: 'cancelled' } 
+            : tempOrder
+        );
+        localStorage.setItem('tempOrders', JSON.stringify(updatedTempOrders));
+        
+        // Update local state
+        setOrder({ ...order, orderStatus: 'cancelled' });
+        toast.success('Order cancelled successfully!');
+        return;
+      }
+
+      // Try to cancel through API
+      try {
+        const cancelledOrder = await orderAPI.cancelOrder(order.id);
+        setOrder(cancelledOrder);
+        toast.success('Order cancelled successfully!');
+      } catch (apiError: any) {
+        console.warn('API cancel failed:', apiError);
+        
+        // Check if it's a CORS or connection error
+        if (apiError.code === 'ERR_NETWORK' || 
+            apiError.message?.includes('CORS') || 
+            apiError.message?.includes('ERR_CONNECTION_REFUSED') ||
+            apiError.name === 'NetworkError') {
+          
+          // Update locally and inform user about backend issues
+          setOrder({ ...order, orderStatus: 'cancelled' });
+          toast.warning(
+            'Order cancelled locally. Backend server is unavailable - changes will need to be synced when server is restored.',
+            { autoClose: 5000 }
+          );
+        } else {
+          // Other API errors
+          toast.error(`Failed to cancel order: ${apiError.response?.data?.message || apiError.message || 'Unknown error'}`);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error cancelling order:', error);
+      toast.error('Failed to cancel order. Please try again.');
+    } finally {
+      setCancellingOrder(false);
+    }
   };
 
   if (loading) {
@@ -398,9 +474,10 @@ const Transaction: React.FC = () => {
                 className="action-btn cancel"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
-                onClick={() => toast.info('Cancel order feature coming soon!')}
+                onClick={handleCancelOrder}
+                disabled={cancellingOrder}
               >
-                Cancel Order
+                {cancellingOrder ? 'Cancelling...' : 'Cancel Order'}
               </motion.button>
             )}
             
@@ -415,6 +492,67 @@ const Transaction: React.FC = () => {
           </div>
         </motion.div>
       </div>
+
+      {/* Cancel Order Modal */}
+      {showCancelModal && (
+        <motion.div 
+          className="modal-overlay"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          onClick={() => setShowCancelModal(false)}
+        >
+          <motion.div 
+            className="cancel-modal"
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.8, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="modal-header">
+              <h3>Cancel Order</h3>
+              <button 
+                className="modal-close"
+                onClick={() => setShowCancelModal(false)}
+              >
+                ×
+              </button>
+            </div>
+            
+            <div className="modal-body">
+              <div className="modal-icon">
+                <FaExclamationTriangle />
+              </div>
+              <p>
+                Are you sure you want to cancel order <strong>#{order?.id}</strong>?
+              </p>
+              <p className="modal-warning">
+                This action cannot be undone. All items in this order will be cancelled.
+              </p>
+            </div>
+            
+            <div className="modal-actions">
+              <motion.button
+                className="modal-btn secondary"
+                onClick={() => setShowCancelModal(false)}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Keep Order
+              </motion.button>
+              <motion.button
+                className="modal-btn danger"
+                onClick={confirmCancelOrder}
+                disabled={cancellingOrder}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                {cancellingOrder ? 'Cancelling...' : 'Cancel Order'}
+              </motion.button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
     </motion.div>
   );
 };

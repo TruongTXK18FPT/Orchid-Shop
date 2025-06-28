@@ -289,6 +289,12 @@ export const orderAPI = {
     return response.data;
   },
 
+  // Cancel order
+  cancelOrder: async (id: number): Promise<OrderDTO> => {
+    const response = await api.patch(`/api/orders/${id}/cancel`);
+    return response.data;
+  },
+
   // Calculate order total
   calculateOrderTotal: async (id: number): Promise<number> => {
     const response = await api.get(`/api/orders/${id}/total`);

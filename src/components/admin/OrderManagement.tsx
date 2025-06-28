@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaEye, FaTrash, FaPlus } from 'react-icons/fa';
+import { FaEye, FaTrash, FaPlus, FaBan } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { adminAPI, orderAPI } from '../../utils/api';
 import type { OrderDTO, CreateOrderRequest, CreateOrderDetailRequest, AccountDTO, Orchid } from '../../types/orchid';
@@ -10,7 +10,9 @@ const OrderManagement: React.FC = () => {
   const [orders, setOrders] = useState<OrderDTO[]>([]);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isCancelModalOpen, setIsCancelModalOpen] = useState(false);
   const [currentOrder, setCurrentOrder] = useState<OrderDTO | null>(null);
+  const [orderToCancel, setOrderToCancel] = useState<OrderDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [users, setUsers] = useState<AccountDTO[]>([]);
   const [orchids, setOrchids] = useState<Orchid[]>([]);
@@ -35,19 +37,20 @@ const OrderManagement: React.FC = () => {
       const data = await adminAPI.getAllOrders();
       
       // Also get temporary orders from localStorage
-      const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+      const tempOrders = JSON.parse(localStorage.getItem('tempOrders') ?? '[]');
       
       // Combine server orders and temp orders
       const allOrders = [...data, ...tempOrders];
       
       setOrders(allOrders);
       setBackendConnected(true);
-      toast.success(`Loaded ${allOrders.length} orders successfully! ${tempOrders.length > 0 ? `(${tempOrders.length} temporary orders)` : ''}`);
+      const tempOrdersText = tempOrders.length > 0 ? `(${tempOrders.length} temporary orders)` : '';
+      toast.success(`Loaded ${allOrders.length} orders successfully! ${tempOrdersText}`);
     } catch (error: any) {
       console.error('Error fetching orders:', error);
       
       // Get temporary orders from localStorage
-      const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+      const tempOrders = JSON.parse(localStorage.getItem('tempOrders') ?? '[]');
       
       // Check if it's a connection/CORS error
       if (error.code === 'ERR_NETWORK' || 
@@ -74,10 +77,10 @@ const OrderManagement: React.FC = () => {
         setBackendConnected(false);
         if (tempOrders.length > 0) {
           setOrders(tempOrders);
-          toast.warning(`Server error: ${error.response?.data?.message || error.message}. Showing ${tempOrders.length} temporary orders only.`);
+          toast.warning(`Server error: ${error.response?.data?.message ?? error.message}. Showing ${tempOrders.length} temporary orders only.`);
         } else {
           setOrders([]);
-          toast.error(`Failed to load orders: ${error.response?.data?.message || error.message || 'Unknown error'}`);
+          toast.error(`Failed to load orders: ${error.response?.data?.message ?? error.message ?? 'Unknown error'}`);
         }
       }
     } finally {
@@ -145,7 +148,7 @@ const OrderManagement: React.FC = () => {
       // Check if this is a temporary order (has timestamp ID)
       if (id > 1000000) {
         // Remove from localStorage
-        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') ?? '[]');
         const updatedTempOrders = tempOrders.filter((order: OrderDTO) => order.id !== id);
         localStorage.setItem('tempOrders', JSON.stringify(updatedTempOrders));
         
@@ -169,7 +172,7 @@ const OrderManagement: React.FC = () => {
       // Check if this is a temporary order (has timestamp ID)
       if (orderId > 1000000) {
         // Update temporary order in localStorage
-        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') ?? '[]');
         const updatedTempOrders = tempOrders.map((order: OrderDTO) => 
           order.id === orderId ? { ...order, orderStatus: newStatus } : order
         );
@@ -211,7 +214,7 @@ const OrderManagement: React.FC = () => {
           );
         } else {
           // Other API errors
-          toast.error(`Failed to update order status: ${apiError.response?.data?.message || apiError.message || 'Unknown error'}`);
+          toast.error(`Failed to update order status: ${apiError.response?.data?.message ?? apiError.message ?? 'Unknown error'}`);
         }
       }
     } catch (error: any) {
@@ -285,7 +288,7 @@ const OrderManagement: React.FC = () => {
         };
         
         // Save to localStorage
-        const existingOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+        const existingOrders = JSON.parse(localStorage.getItem('tempOrders') ?? '[]');
         existingOrders.push(tempOrder);
         localStorage.setItem('tempOrders', JSON.stringify(existingOrders));
         
@@ -364,7 +367,7 @@ const OrderManagement: React.FC = () => {
       console.log('Created order:', createdOrder);
       
       // Remove from temporary orders
-      const tempOrders = JSON.parse(localStorage.getItem('tempOrders') || '[]');
+      const tempOrders = JSON.parse(localStorage.getItem('tempOrders') ?? '[]');
       const updatedTempOrders = tempOrders.filter((order: OrderDTO) => order.id !== tempOrder.id);
       localStorage.setItem('tempOrders', JSON.stringify(updatedTempOrders));
       
@@ -376,6 +379,83 @@ const OrderManagement: React.FC = () => {
       console.error('Error converting temporary order:', error);
       toast.error('Failed to convert temporary order. Please try again.');
     }
+  };
+
+  const handleCancelOrder = async (order: OrderDTO) => {
+    // Check if order can be cancelled
+    if (!['pending', 'processing'].includes(order.orderStatus.toLowerCase())) {
+      toast.error('Only pending or processing orders can be cancelled.');
+      return;
+    }
+
+    // Show custom confirmation modal
+    setOrderToCancel(order);
+    setIsCancelModalOpen(true);
+  };
+
+  const confirmCancelOrder = async () => {
+    if (!orderToCancel) return;
+    
+    try {
+      // Check if this is a temporary order
+      if (orderToCancel.id > 1000000) {
+        // Handle temporary order cancellation
+        const tempOrders = JSON.parse(localStorage.getItem('tempOrders') ?? '[]');
+        const updatedTempOrders = tempOrders.map((tempOrder: OrderDTO) => 
+          tempOrder.id === orderToCancel.id 
+            ? { ...tempOrder, orderStatus: 'cancelled' } 
+            : tempOrder
+        );
+        localStorage.setItem('tempOrders', JSON.stringify(updatedTempOrders));
+        
+        // Update local state
+        setOrders(orders.map(o => 
+          o.id === orderToCancel.id ? { ...o, orderStatus: 'cancelled' } : o
+        ));
+        
+        toast.success('Temporary order cancelled successfully!');
+        setIsCancelModalOpen(false);
+        setOrderToCancel(null);
+        return;
+      }
+
+      // Try to cancel through API
+      try {
+        const cancelledOrder = await orderAPI.cancelOrder(orderToCancel.id);
+        setOrders(orders.map(o => 
+          o.id === orderToCancel.id ? cancelledOrder : o
+        ));
+        toast.success('Order cancelled successfully!');
+      } catch (apiError: any) {
+        console.warn('API cancel failed:', apiError);
+        
+        // Check if it's a CORS or connection error
+        if (apiError.code === 'ERR_NETWORK' || 
+            apiError.message?.includes('CORS') || 
+            apiError.message?.includes('ERR_CONNECTION_REFUSED') ||
+            apiError.name === 'NetworkError') {
+          
+          // Update locally and inform user about backend issues
+          setOrders(orders.map(o => 
+            o.id === orderToCancel.id ? { ...o, orderStatus: 'cancelled' } : o
+          ));
+          
+          toast.warning(
+            'Order cancelled locally. Backend server is unavailable - changes will need to be synced when server is restored.',
+            { autoClose: 5000 }
+          );
+        } else {
+          // Other API errors
+          toast.error(`Failed to cancel order: ${apiError.response?.data?.message ?? apiError.message ?? 'Unknown error'}`);
+        }
+      }
+    } catch (error: any) {
+      console.error('Error cancelling order:', error);
+      toast.error('Failed to cancel order. Please try again.');
+    }
+    
+    setIsCancelModalOpen(false);
+    setOrderToCancel(null);
   };
 
   if (loading) {
@@ -476,6 +556,29 @@ const OrderManagement: React.FC = () => {
                 >
                   <FaEye />
                 </motion.button>
+                
+                {['pending', 'processing'].includes(order.orderStatus.toLowerCase()) && (
+                  <motion.button
+                    className="cancel-order-button"
+                    style={{ 
+                      backgroundColor: '#ff9800', 
+                      color: 'white', 
+                      padding: '6px 8px', 
+                      border: 'none', 
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '14px',
+                      marginLeft: '8px'
+                    }}
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleCancelOrder(order)}
+                    title="Cancel Order"
+                  >
+                    <FaBan />
+                  </motion.button>
+                )}
+                
                 {order.id > 1000000 && (
                   <motion.button
                     className="convert-button"
@@ -666,7 +769,7 @@ const OrderManagement: React.FC = () => {
                           {detail.orchidId > 0 && (
                             <div className="selected-orchid-info">
                               <small>
-                                Selected: {orchids.find(o => o.orchidId === detail.orchidId)?.orchidName || 'Unknown'}
+                                Selected: {orchids.find(o => o.orchidId === detail.orchidId)?.orchidName ?? 'Unknown'}
                               </small>
                             </div>
                           )}
@@ -741,6 +844,67 @@ const OrderManagement: React.FC = () => {
                            newOrder.orderDetails.some(detail => !detail.orchidId || detail.price <= 0)}
                 >
                   Add Order
+                </motion.button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Cancel Order Confirmation Modal */}
+      <AnimatePresence>
+        {isCancelModalOpen && orderToCancel && (
+          <motion.div
+            className="modal-backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => {
+              setIsCancelModalOpen(false);
+              setOrderToCancel(null);
+            }}
+          >
+            <motion.div
+              className="cancel-modal"
+              initial={{ scale: 0.5, opacity: 0, y: 50 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.5, opacity: 0, y: 50 }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="cancel-modal-header">
+                <FaBan className="cancel-icon" />
+                <h3>Cancel Order</h3>
+              </div>
+              
+              <div className="cancel-modal-content">
+                <p>Are you sure you want to cancel order <strong>#{orderToCancel.id}</strong>?</p>
+                <div className="order-info">
+                  <p><strong>Customer:</strong> {orderToCancel.accountName ?? `Account ID: ${orderToCancel.accountId}`}</p>
+                  <p><strong>Total Amount:</strong> {formatPrice(orderToCancel.totalAmount)} VND</p>
+                  <p><strong>Status:</strong> {orderToCancel.orderStatus}</p>
+                </div>
+                <p className="warning-text">This action cannot be undone.</p>
+              </div>
+              
+              <div className="cancel-modal-buttons">
+                <motion.button
+                  className="btn-secondary"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    setIsCancelModalOpen(false);
+                    setOrderToCancel(null);
+                  }}
+                >
+                  Keep Order
+                </motion.button>
+                <motion.button
+                  className="btn-danger"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={confirmCancelOrder}
+                >
+                  Cancel Order
                 </motion.button>
               </div>
             </motion.div>
