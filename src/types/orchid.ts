@@ -93,13 +93,6 @@ export interface CreateAccountRequest {
   roleId: number;
 }
 
-export interface UpdateAccountRequest {
-  accountName: string;
-  email: string;
-  password?: string;
-  roleId: number;
-}
-
 export interface OrderDTO {
   id: number;
   accountId: number; // Backend uses Integer, so should be number
@@ -220,5 +213,5 @@ export interface UpdateAccountRequest {
   accountName: string;
   email: string;
   password?: string;
-  roleId: number;
+  roleId?: number; // Optional to allow non-superadmin users to update without changing role
 }

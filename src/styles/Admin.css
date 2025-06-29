@@ -1043,3 +1043,96 @@ body {
     width: 100%;
   }
 }
+
+/* Role management styles */
+.role-display {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.disabled-input {
+  background-color: #f8f9fa !important;
+  color: #6c757d !important;
+  cursor: not-allowed !important;
+  border: 1px solid #e9ecef !important;
+}
+
+.lock-icon {
+  position: absolute;
+  right: 10px;
+  color: #6c757d;
+  font-size: 0.9rem;
+  pointer-events: none;
+}
+
+.delete-button.disabled {
+  background: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+.delete-button.disabled:hover {
+  background: #6c757d !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+.edit-button.disabled {
+  background: #6c757d !important;
+  cursor: not-allowed !important;
+  opacity: 0.6;
+}
+
+.edit-button.disabled:hover {
+  background: #6c757d !important;
+  transform: none !important;
+  box-shadow: none !important;
+}
+
+/* Permission message styles */
+.permission-message {
+  background: rgba(255, 193, 7, 0.1);
+  border: 1px solid rgba(255, 193, 7, 0.3);
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+  color: #856404 !important;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.permission-message .fa-info-circle {
+  color: #ffc107;
+}
+
+/* Role display in table */
+.role-display-table {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.superadmin-icon {
+  color: #ffd700;
+  font-size: 0.9rem;
+  filter: drop-shadow(0 0 2px rgba(255, 215, 0, 0.3));
+}
+
+/* Account protection indicators */
+.protected-account {
+  position: relative;
+}
+
+.protected-account::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(45deg, transparent 30%, rgba(255, 215, 0, 0.1) 50%, transparent 70%);
+  pointer-events: none;
+  border-radius: 4px;
+}

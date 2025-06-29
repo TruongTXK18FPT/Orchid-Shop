@@ -42,7 +42,7 @@ const Footer: React.FC = () => {
               <span className="contact-icon">
                 <FaPhone />
               </span>
-              +84 123 456 789
+              0931430662
             </motion.li>
             <motion.li 
               className="contact-item"

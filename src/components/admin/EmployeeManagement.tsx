@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FaEdit, FaTrash, FaPlus, FaEye, FaEyeSlash } from 'react-icons/fa';
+import { FaEdit, FaTrash, FaPlus, FaEye, FaEyeSlash, FaLock, FaInfoCircle, FaCrown } from 'react-icons/fa';
 import { toast } from 'react-toastify';
 import { adminAPI } from '../../utils/api';
+import { getAvailableRoles, canDeleteUser, canEditUserRole, canEditUser } from '../../utils/permissions';
 import type { AccountDTO, CreateAccountRequest, UpdateAccountRequest } from '../../types/orchid';
 
 const EmployeeManagement: React.FC = () => {
@@ -11,6 +12,11 @@ const EmployeeManagement: React.FC = () => {
   const [currentEmployee, setCurrentEmployee] = useState<AccountDTO | null>(null);
   const [loading, setLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
+  const [isFetching, setIsFetching] = useState(false);
+  
+  // Get user permissions - calculate once when component mounts
+  const availableRoles = getAvailableRoles();
+  const canEditRoles = canEditUserRole();
   
   // Form state
   const [formData, setFormData] = useState({
@@ -25,16 +31,20 @@ const EmployeeManagement: React.FC = () => {
   }, []);
 
   const fetchEmployees = async () => {
+    if (isFetching) return; // Prevent multiple simultaneous requests
+    
     try {
+      setIsFetching(true);
       setLoading(true);
       const data = await adminAPI.getAllAccounts();
       setEmployees(data);
-      toast.success(`Loaded ${data.length} accounts successfully!`);
+      console.log(`Loaded ${data.length} accounts successfully!`);
     } catch (error) {
       console.error('Error fetching employees:', error);
       toast.error('Failed to load accounts. Please try again.');
     } finally {
       setLoading(false);
+      setIsFetching(false);
     }
   };
 
@@ -54,6 +64,12 @@ const EmployeeManagement: React.FC = () => {
   };
 
   const handleEdit = (employee: AccountDTO) => {
+    // Check if current user can edit this account
+    if (!canEditUser(employee.roleId)) {
+      toast.error('You do not have permission to edit this account.');
+      return;
+    }
+    
     setCurrentEmployee(employee);
     setFormData({
       accountName: employee.accountName,
@@ -88,13 +104,20 @@ const EmployeeManagement: React.FC = () => {
       return;
     }
 
+    // Additional permission check for editing existing accounts
+    if (currentEmployee && !canEditUser(currentEmployee.roleId)) {
+      toast.error('You do not have permission to edit this account.');
+      return;
+    }
+
     try {
       if (currentEmployee) {
         // Update existing employee
         const updateData: UpdateAccountRequest = {
           accountName: formData.accountName,
           email: formData.email,
-          roleId: formData.roleId,
+          // Only include roleId if user has permission to edit roles
+          ...(canEditRoles && { roleId: formData.roleId }),
           ...(formData.password.trim() && { password: formData.password })
         };
         
@@ -109,7 +132,8 @@ const EmployeeManagement: React.FC = () => {
           accountName: formData.accountName,
           email: formData.email,
           password: formData.password,
-          roleId: formData.roleId
+          // Only include roleId if user has permission to edit roles, otherwise default to admin
+          roleId: canEditRoles ? formData.roleId : 2
         };
         
         const newEmployee = await adminAPI.createAccount(createData);
@@ -126,6 +150,15 @@ const EmployeeManagement: React.FC = () => {
   };
 
   const handleDelete = async (id: string) => {
+    const employeeToDelete = employees.find(emp => emp.accountId === id);
+    if (!employeeToDelete) return;
+
+    // Check if current user can delete this account
+    if (!canDeleteUser(employeeToDelete.roleId)) {
+      toast.error('You do not have permission to delete this account.');
+      return;
+    }
+
     if (window.confirm('Are you sure you want to delete this account?')) {
       try {
         await adminAPI.deleteAccount(parseInt(id));
@@ -160,6 +193,13 @@ const EmployeeManagement: React.FC = () => {
         </motion.button>
       </div>
 
+      {!canEditRoles && (
+        <div className="permission-message">
+          <FaInfoCircle />
+          <span>Note: Only Super Admin can edit user roles, edit/delete Super Admin accounts, and delete any accounts.</span>
+        </div>
+      )}
+
       <motion.table
         className="management-table"
         variants={tableVariants}
@@ -180,27 +220,53 @@ const EmployeeManagement: React.FC = () => {
               key={employee.accountId}
               variants={rowVariants}
               whileHover={{ backgroundColor: 'rgba(155, 77, 255, 0.05)' }}
+              className={employee.roleId === 1 && !canEditUser(employee.roleId) ? 'protected-account' : ''}
             >
               <td>{employee.accountName}</td>
               <td>{employee.email}</td>
-              <td style={{ textTransform: 'capitalize' }}>{employee.roleName}</td>
+              <td>
+                <div className="role-display-table">
+                  <span style={{ textTransform: 'capitalize' }}>{employee.roleName}</span>
+                  {employee.roleId === 1 && <FaCrown className="superadmin-icon" title="Super Admin" />}
+                </div>
+              </td>
               <td className="action-buttons">
-                <motion.button
-                  className="edit-button"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleEdit(employee)}
-                >
-                  <FaEdit />
-                </motion.button>
-                <motion.button
-                  className="delete-button"
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => handleDelete(employee.accountId)}
-                >
-                  <FaTrash />
-                </motion.button>
+                {canEditUser(employee.roleId) ? (
+                  <motion.button
+                    className="edit-button"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleEdit(employee)}
+                  >
+                    <FaEdit />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    className="edit-button disabled"
+                    disabled
+                    title="You cannot edit this account"
+                  >
+                    <FaLock />
+                  </motion.button>
+                )}
+                {canDeleteUser(employee.roleId) ? (
+                  <motion.button
+                    className="delete-button"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => handleDelete(employee.accountId)}
+                  >
+                    <FaTrash />
+                  </motion.button>
+                ) : (
+                  <motion.button
+                    className="delete-button disabled"
+                    disabled
+                    title="You cannot delete this account"
+                  >
+                    <FaLock />
+                  </motion.button>
+                )}
               </td>
             </motion.tr>
           ))}
@@ -272,15 +338,28 @@ const EmployeeManagement: React.FC = () => {
 
                 <div className="form-group">
                   <label htmlFor="roleId">Role *</label>
-                  <select
-                    id="roleId"
-                    value={formData.roleId}
-                    onChange={(e) => setFormData({ ...formData, roleId: parseInt(e.target.value) })}
-                    required
-                  >
-                    <option value={2}>Admin</option>
-                    <option value={3}>Customer</option>
-                  </select>
+                  {canEditRoles ? (
+                    <select
+                      id="roleId"
+                      value={formData.roleId}
+                      onChange={(e) => setFormData({ ...formData, roleId: parseInt(e.target.value) })}
+                      required
+                    >
+                      {availableRoles.map(role => (
+                        <option key={role.id} value={role.id}>{role.name}</option>
+                      ))}
+                    </select>
+                  ) : (
+                    <div className="role-display">
+                      <input
+                        type="text"
+                        value={availableRoles.find(r => r.id === formData.roleId)?.name ?? 'Admin'}
+                        disabled
+                        className="disabled-input"
+                      />
+                      <FaLock className="lock-icon" title="Only Super Admin can edit roles" />
+                    </div>
+                  )}
                 </div>
 
                 <div className="modal-buttons">
